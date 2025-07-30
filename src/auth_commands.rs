@@ -16,7 +16,7 @@ pub async fn new_account(username: &str, email: &str, password: &str) -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
     //create uuid for the new account
     let dev_id = match manage_keys::get_uuid(username).await {
         Ok(id) => id,
@@ -51,7 +51,7 @@ pub async fn login_new(username: &str, password: &str) -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
 
     if check_for_user(username).await? {
         
@@ -86,13 +86,13 @@ pub async fn login_existing(username: &str) -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
 
     Ok(establish_websocket::establish_websocket(username).await?)
 }
 
 
-async fn store_user(username: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn store_user(username: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
@@ -103,7 +103,7 @@ async fn store_user(username: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn check_for_user(username: &str) -> Result<bool, Box<dyn std::error::Error>> {
+async fn check_for_user(username: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
     let mut reader = ReaderBuilder::new()
         .has_headers(false)  // Add this since you don't have headers
         .from_path("users.csv")?;
@@ -117,26 +117,4 @@ async fn check_for_user(username: &str) -> Result<bool, Box<dyn std::error::Erro
         }
     }
     Ok(false)
-}
-
-pub async fn begin_recv_task(mut recv: SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>>) {
-    tokio::spawn(async move {
-        while let Some(msg) = recv.next().await {
-            match msg {
-                Ok(Message::Text(text)) => {
-                    let mut stdout = tokio::io::stdout();
-                    stdout.write_all(format!("Received: {}", text).as_bytes()).await.unwrap();
-                }
-                Ok(Message::Close(_)) => {
-                    println!("Connection closed");
-                    break;
-                }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    break;
-                }
-                _ => {}
-            }
-        }
-    });
 }

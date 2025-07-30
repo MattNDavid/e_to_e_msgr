@@ -2,11 +2,10 @@ use tokio_tungstenite::{tungstenite::protocol::Message, WebSocketStream};
 use futures_util::stream::{SplitStream, SplitSink};
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 use tokio::io::{AsyncWriteExt};
-use futures_util::{StreamExt};
 use csv::ReaderBuilder;
 use tokio::net::TcpStream;
 
-use crate::commands;
+use crate::auth_commands;
 /**
  * A simple CLI for loggin in with the messenger client.
  * NOT INTEDED FOR PRODUCTION USE.
@@ -16,7 +15,7 @@ pub async fn cli() ->Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut stdout = io::stdout();
     stdout.write_all(b"Welcome to the End-to-End Encrypted Messenger CLI!\n1. New Account\n2. Login\n").await?;
@@ -68,7 +67,7 @@ async fn new_account() -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
     // Implement the logic for creating a new account
     let mut stdout = io::stdout();
     stdout.write_all(b"Enter username, email, and password in format 'username,email,password': ").await?;
@@ -88,14 +87,14 @@ async fn new_account() -> Result<
     let email = parts[1].trim();
     let password = parts[2].trim();
 
-    Ok(commands::new_account(username, email, password).await?)
+    Ok(auth_commands::new_account(username, email, password).await?)
 }
 
 async fn login() -> Result<
 (
     SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
     SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-), Box<dyn std::error::Error>> {
+), Box<dyn std::error::Error + Send + Sync>> {
     //check for previously logged in users
     let mut stdout = io::stdout();
     
@@ -164,15 +163,15 @@ async fn login_existing(username: &str) -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
-    Ok(commands::login_existing(username).await?)
+    ), Box<dyn std::error::Error + Send + Sync>> {
+    Ok(auth_commands::login_existing(username).await?)
 }
 
 async fn login_new() -> Result<
     (
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
-    ), Box<dyn std::error::Error>> {
+    ), Box<dyn std::error::Error + Send + Sync>> {
     let mut stdout = io::stdout();
     stdout.write_all(b"Enter username and password in format 'username,password': ").await?;
     stdout.flush().await?;
@@ -190,7 +189,7 @@ async fn login_new() -> Result<
     let username = parts[0].trim();
     let password = parts[1].trim();
 
-    Ok(commands::login_new(username, password).await?)
+    Ok(auth_commands::login_new(username, password).await?)
 }
 
 

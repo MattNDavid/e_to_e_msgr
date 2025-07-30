@@ -1,7 +1,7 @@
 use reqwest::Client;
 
 //only for POST atp
-pub async fn to_server(uri: &str, payload: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+pub async fn to_server(uri: &str, payload: serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
     let url = format!("http://localhost:3000/{}", uri);
     let client = Client::new();
     let resp = client.post(url)

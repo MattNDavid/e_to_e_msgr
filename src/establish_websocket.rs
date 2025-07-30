@@ -13,7 +13,7 @@ pub async fn establish_websocket(username: &str) -> Result<
         SplitSink<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>, Message>,
         SplitStream<WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>>
     ),
-    Box<dyn std::error::Error>
+    Box<dyn std::error::Error + Send + Sync>
 > {
     let url = "ws://localhost:3000/ws";
     let mut request = url.into_client_request()?;
