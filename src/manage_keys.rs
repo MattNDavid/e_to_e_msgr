@@ -45,16 +45,16 @@ pub async fn get_token(username: &str) -> Result<String, BoxError> {
     }
 }
 
-/*
-pub async fn delete_token(username: &str) -> Result<(), BoxError> {
-    let keyring = Entry::new("e_to_e_msgr_token", username)?;
-    
-    match keyring.delete_password() {
+
+pub async fn delete_credential(username: &str, cred_type: &str) -> Result<(), BoxError> {
+    let keyring = Entry::new(cred_type, username)?;
+
+    match keyring.delete_credential() {
         Ok(()) => Ok(()),
         Err(e) => Err(Box::new(e)),
     }
 }
-*/
+
 
 pub async fn store_device_id(username: &str, device_id: &str) -> Result<(), BoxError> {
     let keyring = Entry::new("e_to_e_msgr_device_id", username)?;

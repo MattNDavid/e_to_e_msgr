@@ -11,12 +11,17 @@ mod auth_cli;
 mod session_cli;
 mod to_server;
 mod session_manager;
+mod tests;
+mod messages;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn::std::error::Error + Send + Sync>> {
     // Initialize the CLI for authentication
+    /*
     let (tx, rx) = auth_cli::cli().await?;
     session_manager::session(tx, rx).await?;
+    */
+    tests::run_all_tests().await;
 
 
     Ok(())
