@@ -13,6 +13,8 @@ mod to_server;
 mod session_manager;
 mod tests;
 mod messages;
+mod json_structures;
+mod db;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn::std::error::Error + Send + Sync>> {

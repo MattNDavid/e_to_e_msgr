@@ -1,16 +1,15 @@
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 use csv::ReaderBuilder;
-use serde_json::{de, json};
+use serde_json::{json};
 use tokio_tungstenite::{tungstenite::protocol::Message, WebSocketStream};
 use futures_util::stream::{SplitSink, SplitStream};
-use futures_util::{StreamExt};
 use tokio::net::TcpStream;
-
 
 use crate::manage_keys;
 use crate::establish_websocket;
 use crate::to_server;
+use crate::db;
 
 pub async fn new_account(username: &str, email: &str, password: &str) -> Result<
     (
@@ -21,7 +20,6 @@ pub async fn new_account(username: &str, email: &str, password: &str) -> Result<
     let dev_id = match manage_keys::get_uuid(username).await {
         Ok(id) => id,
         Err(_) => {
-            eprintln!("Failed to retrieve device UUID. Generating a new one.");
             manage_keys::generate_uuid(username).await.unwrap()
         }
     };
@@ -41,6 +39,9 @@ pub async fn new_account(username: &str, email: &str, password: &str) -> Result<
     manage_keys::store_token(token, username).await?;
     manage_keys::store_device_id(username, device_id).await?;
     manage_keys::store_uuid(username, &dev_id).await?;
+    
+    db::initialize_db(username).await?;
+
     //store the user in a local file for future login
     store_user(username).await?;
 
@@ -61,7 +62,6 @@ pub async fn login_new(username: &str, password: &str) -> Result<
     let dev_id = match manage_keys::get_uuid(username).await {
         Ok(id) => id,
         Err(_) => {
-            eprintln!("Failed to retrieve device UUID. Generating a new one.");
             manage_keys::generate_uuid(username).await.unwrap()
         }
     };

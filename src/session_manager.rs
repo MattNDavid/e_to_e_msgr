@@ -63,7 +63,7 @@ async fn tx_task(
     Ok(())
 }
 
-async fn process_message(msg: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn process_message(msg: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let msg: serde_json::Value = serde_json::from_str(msg)?;
 
     let msg_type = msg.get("type")
@@ -73,6 +73,10 @@ async fn process_message(msg: &str) -> Result<(), Box<dyn std::error::Error + Se
     match msg_type {
         "auth" => {
             auth_handler(msg).await?;
+        }
+        "message" => {
+            // Handle incoming message
+            println!("Received message: {:?}", msg);
         }
         _ => {
             return Err(Box::from("Unknown message type"));
@@ -90,9 +94,7 @@ async fn auth_handler(msg: serde_json::Value) -> Result<(), Box<dyn std::error::
     match subtype {
         "confirm" => {
             // Handle confirmation
-            println!("Handling confirmation");
             let result = auth_confirm(msg).await;
-            println!("Confirmation handled");
             return result;
         }
         "logout" => {
@@ -112,8 +114,6 @@ pub async fn auth_confirm(msg: serde_json::Value) -> Result<(), Box<dyn std::err
     let token = msg.get("token")
         .and_then(|v| v.as_str())
         .ok_or("Token not found")?;
-
-    println!("Token: {}", token);
 
     let user_id = msg.get("user_id")
         .and_then(|v| v.as_str())
